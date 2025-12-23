@@ -113,6 +113,7 @@ PREFERRED_RPROVIDER_kernel-module-tegra-bpmp-thermal ?= "nv-kernel-module-tegra-
 PREFERRED_RPROVIDER_kernel-module-tegra-drm ?= "nv-kernel-module-tegra-drm"
 
 CUDA_VERSION ?= "12.6"
+CUDA_VERSION:tegra254 ?= "13.0"
 CUDA_ARCHITECTURES ?= "${TEGRA_CUDA_ARCHITECTURE}"
 CUDA_NVCC_ARCH_FLAGS ?= "--gpu-architecture=compute_${TEGRA_CUDA_ARCHITECTURE} --gpu-code=sm_${TEGRA_CUDA_ARCHITECTURE}"
 
