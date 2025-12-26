@@ -2,7 +2,7 @@ SUMMARY = "NVIDIA L4T binaries"
 DESCRIPTION = "Downloads NVIDIA L4T binary-only packages for sharing with other recipes"
 SECTION = "base"
 
-require tegra-binaries-${PV}.inc
+require tegra-binaries-38.2.1.inc
 
 WORKDIR = "${TMPDIR}/work-shared/L4T-${L4T_BSP_ARCH}-${PV}-${PR}"
 SSTATE_SWSPEC = "sstate:tegra-binaries::${PV}:${PR}::${SSTATE_VERSION}:"

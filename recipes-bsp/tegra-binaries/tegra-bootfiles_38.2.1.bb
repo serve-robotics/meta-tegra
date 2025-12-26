@@ -1,4 +1,4 @@
-require tegra-binaries-${PV}.inc
+require tegra-binaries-38.2.1.inc
 require tegra-shared-binaries.inc
 
 COMPATIBLE_MACHINE = "(tegra)"
@@ -41,7 +41,7 @@ prepare_badpage_mapfile()  {
 do_install() {
     install -d ${D}${datadir}/tegraflash
     install -m 0644 ${S}/nv_tegra/bsp_version ${D}${datadir}/tegraflash/
-    for f in ${TEGRA_BOOT_FIRMARE_FILES}; do
+    for f in ${TEGRA_BOOT_FIRMWARE_FILES}; do
         install -m 0644 ${S}/bootloader/$f ${D}${datadir}/tegraflash
     done
     install_other_boot_firmware_files
