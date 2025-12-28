@@ -63,3 +63,45 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for information on submitting
 patches to the maintainers.
 
 Contributions are welcome!
+
+## Jetson AGX Thor Support (thor-scarthgap branch)
+
+This branch adds support for the NVIDIA Jetson AGX Thor Developer Kit with 
+Jetson Linux R38.2.1 (JetPack 7.0).
+
+### Key Features:
+- Ubuntu 24.04 LTS base
+- Linux Kernel 6.8
+- SBSA (Server Base System Architecture) support
+- CUDA 13.0
+- cuDNN 9.12
+- TensorRT 10.13
+- OpenRM-based stack
+- Based on Tegra234 SoC (same as Orin)
+
+### Supported Hardware:
+- Jetson AGX Thor Developer Kit
+- Jetson T5000 module
+
+### Building for Thor:
+
+```bash
+# Set up build environment
+source oe-init-build-env
+
+# Add meta-tegra layer
+bitbake-layers add-layer ../meta-tegra
+
+# Configure for Thor
+echo 'MACHINE = "jetson-agx-thor-devkit"' >> conf/local.conf
+
+# Build image
+bitbake tegra-thor-image
+```
+
+### References:
+
+- [Jetson Linux R38.2.1 Release Notes](https://docs.nvidia.com/jetson/archives/r38.2.1/ReleaseNotes/)
+- [Jetson Thor Developer Guide](https://docs.nvidia.com/jetson/archives/r38.2/DeveloperGuide/)
+- [JetPack 7.0 Downloads](https://developer.nvidia.com/embedded/jetpack/downloads)
+

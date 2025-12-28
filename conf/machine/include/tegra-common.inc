@@ -72,7 +72,7 @@ EXTRA_IMAGECMD:ext4 ?= "-i 4096 -b 4096"
 IMAGE_CLASSES += "image_types_tegra"
 IMAGE_FSTYPES += "tegraflash"
 
-INITRAMFS_IMAGE ?= "tegra-minimal-initramfs"
+# INITRAMFS_IMAGE ?= "tegra-minimal-initramfs"
 INITRAMFS_IMAGE_BUNDLE ?= "0"
 TEGRA_INITRAMFS_FSTYPES ?= "${@'' if d.getVar('INITRAMFS_IMAGE_BUNDLE') == '1' else ' cpio.gz.cboot'}"
 INITRAMFS_FSTYPES:append = "${TEGRA_INITRAMFS_FSTYPES}"
@@ -88,7 +88,7 @@ MACHINE_ESSENTIAL_EXTRA_RDEPENDS = "tegra-firmware ${TEGRA_ESSENTIAL_EXTRA_RDEPE
 MACHINE_ESSENTIAL_EXTRA_RRECOMMENDS = "kernel-module-ina3221 kernel-module-lm90 kernel-module-tegra-bpmp-thermal kernel-module-spi-tegra114 kernel-module-pwm-fan \
                                        kernel-module-governor-userspace kernel-module-ucsi-ccg kernel-module-pcie-tegra194 kernel-module-phy-tegra194-p2u \
                                        kernel-module-nvme kernel-module-pwm-tegra kernel-module-tegra-xudc"
-MACHINE_EXTRA_RDEPENDS = "tegra-nvphs tegra-nvs-service tegra-nvsciipc tegra-nvstartup tegra-nvfancontrol tegra-configs-udev tegra-redundant-boot nvidia-kernel-oot-display"
+MACHINE_EXTRA_RDEPENDS = "nvidia-kernel-oot-display"
 MACHINE_EXTRA_RRECOMMENDS = "kernel-module-snd-hda-tegra kernel-module-snd-hda-codec-hdmi nvidia-kernel-oot-cameras nvidia-kernel-oot-canbus"
 MACHINE_HWCODECS = "gstreamer1.0-plugins-nvvideo4linux2"
 
