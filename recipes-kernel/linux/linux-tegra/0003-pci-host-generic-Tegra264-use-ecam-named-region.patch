@@ -1,0 +1,126 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Yocto Builder <builder@yoctoproject.org>
+Date: Tue, 7 Jan 2026 19:00:00 +0000
+Subject: [PATCH] pci-host-generic: Tegra264 custom probe with ecam region
+
+Thor (Tegra264) PCIe controllers have multiple named memory regions:
+xal, xtl, xtl-pri, xpl, ecam
+
+The generic probe uses the first region (xal at 16KB), but needs the
+"ecam" named region for proper ECAM operation.
+
+This adds a custom probe for Tegra264 that uses devm_pci_alloc_host_bridge()
+to properly initialize the host bridge, then creates the ECAM config window
+using the ecam named region instead of the first region.
+
+Signed-off-by: Yocto Builder <builder@yoctoproject.org>
+---
+ drivers/pci/controller/pci-host-generic.c | 77 ++++++++++++++++++++++-
+ 1 file changed, 76 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/pci-host-generic.c b/drivers/pci/controller/pci-host-generic.c
+index 1234567890ab..abcdef123456 100644
+--- a/drivers/pci/controller/pci-host-generic.c
++++ b/drivers/pci/controller/pci-host-generic.c
+@@ -13,6 +13,10 @@
+ #include <linux/module.h>
+ #include <linux/pci-ecam.h>
+ #include <linux/platform_device.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/resource_ext.h>
+
+ static const struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+ 	.bus_shift	= 16,
+@@ -80,12 +84,83 @@ static const struct of_device_id gen_pci_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, gen_pci_of_match);
+
++static void gen_pci_unmap_cfg(void *ptr)
++{
++	pci_ecam_free((struct pci_config_window *)ptr);
++}
++
++/* Custom probe for Tegra264 that uses the ecam named region */
++static int tegra264_pci_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	const struct pci_ecam_ops *ops;
++	struct pci_host_bridge *bridge;
++	struct pci_config_window *cfg;
++	struct resource *ecam_res;
++	struct resource cfgres;
++	struct resource_entry *bus;
++	int err;
++
++	ops = of_device_get_match_data(dev);
++	if (!ops)
++		return -ENODEV;
++
++	/* Get the ecam resource by name */
++	ecam_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam");
++	if (!ecam_res) {
++		dev_err(dev, "Tegra264: missing 'ecam' named resource\n");
++		return -EINVAL;
++	}
++
++	cfgres = *ecam_res;
++	cfgres.name = "PCI ECAM";
++
++	dev_info(dev, "Tegra264: using ecam region at %pR\n", &cfgres);
++
++	/* Allocate host bridge - this also parses DT ranges into bridge->windows */
++	bridge = devm_pci_alloc_host_bridge(dev, 0);
++	if (!bridge)
++		return -ENOMEM;
++
++	platform_set_drvdata(pdev, bridge);
++
++	of_pci_check_probe_only();
++
++	/* Get bus range from bridge->windows */
++	bus = resource_list_first_type(&bridge->windows, IORESOURCE_BUS);
++	if (!bus) {
++		dev_err(dev, "No bus range found\n");
++		return -ENODEV;
++	}
++
++	/* Create ECAM config window with ecam region and bus range */
++	cfg = pci_ecam_create(dev, &cfgres, bus->res, ops);
++	if (IS_ERR(cfg))
++		return PTR_ERR(cfg);
++
++	/* Register cleanup handler */
++	err = devm_add_action_or_reset(dev, gen_pci_unmap_cfg, cfg);
++	if (err)
++		return err;
++
++	bridge->sysdata = cfg;
++	bridge->ops = (struct pci_ops *)&ops->pci_ops;
++	bridge->msi_domain = true;
++
++	return pci_host_probe(bridge);
++}
++
++/* Probe wrapper that handles Tegra264 special case */
++static int gen_pci_probe_wrapper(struct platform_device *pdev)
++{
++	if (of_device_is_compatible(pdev->dev.of_node, "nvidia,tegra264-pcie"))
++		return tegra264_pci_probe(pdev);
++	return pci_host_common_probe(pdev);
++}
++
+ static struct platform_driver gen_pci_driver = {
+ 	.driver = {
+ 		.name = "pci-host-generic",
+ 		.of_match_table = gen_pci_of_match,
+ 	},
+-	.probe = pci_host_common_probe,
++	.probe = gen_pci_probe_wrapper,
+ 	.remove_new = pci_host_common_remove,
+ };
+ module_platform_driver(gen_pci_driver);
+--
+2.34.1
+

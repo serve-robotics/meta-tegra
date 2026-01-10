@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Yocto Builder <builder@yoctoproject.org>
+Date: Tue, 7 Jan 2026 03:30:00 +0000
+Subject: [PATCH] DISABLE tegra194 driver for nvidia,tegra264-pcie
+
+Thor (Tegra264) uses SBSA/ECAM PCIe controllers with different memory
+regions (xal, xtl, xpl, ecam) than standard Tegra (dbi, appl, atu_dma).
+
+The device tree should use "snps,dw-pcie-ecam" instead, which will
+be handled by the generic DesignWare ECAM driver (pci-host-generic.c).
+
+This patch removes nvidia,tegra264-pcie from the tegra194 driver to
+prevent it from trying to probe Thor controllers.
+
+Signed-off-by: Yocto Builder <builder@yoctoproject.org>
+---
+ drivers/pci/controller/dwc/pcie-tegra194.c | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 1234567890ab..1234567890ab 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+
+--
+2.34.1

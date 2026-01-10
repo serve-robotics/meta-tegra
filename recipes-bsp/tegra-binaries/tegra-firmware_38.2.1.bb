@@ -1,6 +1,6 @@
 DESCRIPTION = "NVIDIA firmware for Jetson Thor"
 LICENSE = "Proprietary"
-LIC_FILES_CHKSUM = "file://nv_tegra/LICENSE;md5=60ad17cc726658e8cf73578bea47b85f"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Proprietary;md5=0557f9d92cf58f2ccdd50f62f8ac0b28"
 
 require tegra-binaries-${PV}.inc
 

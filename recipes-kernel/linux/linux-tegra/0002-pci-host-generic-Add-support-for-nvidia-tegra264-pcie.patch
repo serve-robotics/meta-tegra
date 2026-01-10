@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Yocto Builder <builder@yoctoproject.org>
+Date: Tue, 7 Jan 2026 15:00:00 +0000
+Subject: [PATCH] pci-host-generic: Add support for nvidia,tegra264-pcie
+
+Thor (Tegra264) uses SBSA/ECAM PCIe controllers with DesignWare IP.
+The controllers have memory regions (xal, xtl, xpl, ecam) compatible
+with the DesignWare ECAM driver.
+
+Add nvidia,tegra264-pcie to use the pci_dw_ecam_bus_ops,  same as
+other DesignWare ECAM controllers like Synquacer and Armada.
+
+Signed-off-by: Yocto Builder <builder@yoctoproject.org>
+---
+ drivers/pci/controller/pci-host-generic.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/pci/controller/pci-host-generic.c b/drivers/pci/controller/pci-host-generic.c
+index 1234567890ab..1234567890ab 100644
+--- a/drivers/pci/controller/pci-host-generic.c
++++ b/drivers/pci/controller/pci-host-generic.c
+@@ -75,6 +75,9 @@ static const struct of_device_id gen_pci_of_match[] = {
+ 	{ .compatible = "snps,dw-pcie-ecam",
+ 	  .data = &pci_dw_ecam_bus_ops },
+
++	{ .compatible = "nvidia,tegra264-pcie",
++	  .data = &pci_dw_ecam_bus_ops },
++
+ 	{ },
+ };
+
+--
+2.34.1
