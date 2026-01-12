@@ -58,14 +58,8 @@ IMAGE_INSTALL += " \
     tegra-configs-alsa \
 "
 
-# Add NVIDIA GPU firmware (for 580.00 driver)
-# NOTE: nvidia.ko is built from source in nvidia-kernel-oot with version 580.00
-# GB10B firmware for discrete GPU is now in tegra-libraries-core
-IMAGE_INSTALL += " \
-    nvidia-gpu-openrm-firmware \
-"
-
 # Add NVIDIA CUDA driver libraries and toolkit
+# Note: GB10B GPU firmware is provided by tegra-libraries-core
 IMAGE_INSTALL += " \
     nvidia-l4t-cuda \
     cuda-toolkit-sbsa \

@@ -1,0 +1,45 @@
+From: Yocto Build <yocto@build.local>
+Subject: [PATCH] gpu: host1x: Make context_bus build independently of host1x driver
+
+The NVIDIA OOT host1x module requires host1x_context_device_bus_type
+to be provided by the kernel. This symbol is defined in context_bus.c
+which is only built when CONFIG_TEGRA_HOST1X is enabled.
+
+When using OOT host1x driver, CONFIG_TEGRA_HOST1X must be disabled to
+avoid conflicts, but this also disables context_bus, causing the OOT
+module to fail with "Unknown symbol host1x_context_device_bus_type".
+
+Fix this by making CONFIG_TEGRA_HOST1X_CONTEXT_BUS a standalone option
+that defaults to y on Tegra platforms, independent of CONFIG_TEGRA_HOST1X.
+
+Signed-off-by: Yocto Build <yocto@build.local>
+---
+ drivers/gpu/host1x/Kconfig | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/host1x/Kconfig b/drivers/gpu/host1x/Kconfig
+index 1234567..abcdefg 100644
+--- a/drivers/gpu/host1x/Kconfig
++++ b/drivers/gpu/host1x/Kconfig
+@@ -1,7 +1,13 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+
+ config TEGRA_HOST1X_CONTEXT_BUS
+-	bool
++	bool "NVIDIA Tegra host1x context bus"
++	depends on ARCH_TEGRA || COMPILE_TEST
++	default y if ARCH_TEGRA
++	help
++	  Bus type for host1x memory context devices. Required for IOMMU
++	  integration with host1x clients. Enable this if using the OOT
++	  host1x driver or the in-tree host1x driver.
+
+ config TEGRA_HOST1X
+ 	tristate "NVIDIA Tegra host1x driver"
+@@ -9,7 +30,6 @@ config TEGRA_HOST1X
+ 	depends on ARCH_TEGRA || COMPILE_TEST
+ 	select DMA_SHARED_BUFFER
+-	select TEGRA_HOST1X_CONTEXT_BUS
+ 	select IOMMU_IOVA
+ 	help
+ 	  Driver for the NVIDIA Tegra host1x hardware.
