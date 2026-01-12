@@ -1,0 +1,123 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          docker
+# Required-Start:    $syslog $remote_fs
+# Required-Stop:     $syslog $remote_fs
+# Should-Start:      cgroupfs-mount cgroup-lite
+# Should-Stop:       cgroupfs-mount cgroup-lite
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Docker container runtime
+# Description:       Docker daemon for container management
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/bin/dockerd
+NAME=docker
+DESC="Docker Application Container Engine"
+PIDFILE=/var/run/docker.pid
+
+# Exit if docker is not installed
+[ -x "$DAEMON" ] || exit 0
+
+# Read configuration defaults
+[ -r /etc/default/docker ] && . /etc/default/docker
+
+# Load kernel modules required for Docker
+load_modules() {
+    for mod in overlay br_netfilter veth ip_vs ip_vs_rr nf_conntrack nf_nat; do
+        modprobe $mod 2>/dev/null || true
+    done
+}
+
+# Mount cgroup filesystem if not already mounted
+mount_cgroups() {
+    if ! mountpoint -q /sys/fs/cgroup; then
+        mount -t tmpfs -o uid=0,gid=0,mode=0755 cgroup /sys/fs/cgroup
+    fi
+
+    # Mount individual cgroup controllers
+    for subsys in memory cpuset cpu cpuacct blkio devices freezer net_cls perf_event net_prio hugetlb pids; do
+        if [ -d /sys/fs/cgroup/$subsys ] || mkdir -p /sys/fs/cgroup/$subsys 2>/dev/null; then
+            if ! mountpoint -q /sys/fs/cgroup/$subsys; then
+                mount -t cgroup -o $subsys cgroup /sys/fs/cgroup/$subsys 2>/dev/null || true
+            fi
+        fi
+    done
+}
+
+LOGFILE=/var/log/docker.log
+
+case "$1" in
+    start)
+        echo -n "Starting $DESC: "
+
+        # Check if already running
+        if [ -f $PIDFILE ] && kill -0 $(cat $PIDFILE) 2>/dev/null; then
+            echo "already running."
+            exit 0
+        fi
+
+        load_modules
+        mount_cgroups
+
+        # Remove stale pidfile
+        rm -f $PIDFILE
+
+        # Start dockerd - configuration comes from /etc/docker/daemon.json
+        # Let dockerd manage its own pidfile (don't write it ourselves - causes conflict)
+        $DAEMON --pidfile=$PIDFILE $DOCKER_OPTS >> $LOGFILE 2>&1 &
+
+        # Wait for dockerd to initialize and write pidfile
+        sleep 2
+        if kill -0 $(cat $PIDFILE) 2>/dev/null; then
+            echo "$NAME."
+        else
+            echo "failed. Check $LOGFILE"
+            rm -f $PIDFILE
+            exit 1
+        fi
+        ;;
+    stop)
+        echo -n "Stopping $DESC: "
+        if [ -f $PIDFILE ]; then
+            pid=$(cat $PIDFILE)
+            kill $pid 2>/dev/null
+            # Wait for graceful shutdown
+            count=0
+            while kill -0 $pid 2>/dev/null && [ $count -lt 30 ]; do
+                sleep 1
+                count=$((count + 1))
+            done
+            # Force kill if still running
+            kill -9 $pid 2>/dev/null || true
+            rm -f $PIDFILE
+        fi
+        echo "$NAME."
+        ;;
+    restart|force-reload)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+    status)
+        if [ -f $PIDFILE ]; then
+            if kill -0 $(cat $PIDFILE) 2>/dev/null; then
+                echo "$NAME is running."
+                exit 0
+            else
+                echo "$NAME is not running but pidfile exists."
+                exit 1
+            fi
+        else
+            echo "$NAME is not running."
+            exit 3
+        fi
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

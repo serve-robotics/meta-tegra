@@ -1,0 +1,15 @@
+# Docker required kernel modules
+# Loaded at boot via /etc/modules
+overlay
+br_netfilter
+veth
+ip_vs
+ip_vs_rr
+ip_vs_wrr
+ip_vs_sh
+nf_conntrack
+nf_conntrack_netlink
+xt_conntrack
+xt_addrtype
+nf_nat
+xt_nat

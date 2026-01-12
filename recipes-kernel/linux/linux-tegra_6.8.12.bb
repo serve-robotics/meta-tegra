@@ -16,6 +16,7 @@ KERNEL_DEVICETREE = ""
 # Download the NVIDIA sources - R38.2.1 includes kernel 6.8.12
 SRC_URI = "https://developer.nvidia.com/downloads/embedded/l4t/r38_release_v2.1/sources/public_sources.tbz2;name=public;unpack=0 \
            file://0002-pci-host-generic-Add-support-for-nvidia-tegra264-pcie.patch \
+           file://0004-host1x-Make-context_bus-build-independently.patch \
 "
 SRC_URI[public.sha256sum] = "460b0e9143cde12bbb83d74e464e1992596265ec57fc3ca08bf57b4dd6b6bb16"
 
@@ -24,27 +25,49 @@ S = "${TMPDIR}/work-shared/${MACHINE}/kernel-source"
 
 inherit kernel
 
-# Enable NVMe and Tegra PCIe built-in (required for booting from NVMe without initramfs)
+# Enable NVMe and PCIe built-in (required for booting from NVMe without initramfs)
+# Disable drivers that conflict with OOT modules
 do_configure:append() {
-    # Change NVMe from modules (=m) to built-in (=y)
+    # Run olddefconfig to establish baseline
+    oe_runmake -C ${S} O=${B} olddefconfig
+
+    # Change NVMe from modules (=m) to built-in (=y) for NVMe boot
     sed -i 's/CONFIG_NVME_CORE=m/CONFIG_NVME_CORE=y/' ${B}/.config
     sed -i 's/CONFIG_BLK_DEV_NVME=m/CONFIG_BLK_DEV_NVME=y/' ${B}/.config
 
-    # Enable multipath and hwmon as built-in too
-    sed -i 's/# CONFIG_NVME_MULTIPATH is not set/CONFIG_NVME_MULTIPATH=y/' ${B}/.config
-    sed -i 's/CONFIG_NVME_HWMON=y/CONFIG_NVME_HWMON=y/' ${B}/.config
+    # Ensure generic PCI host controller driver is built-in
+    # Thor uses ECAM-based PCIe via pci-host-generic
+    sed -i 's/CONFIG_PCI_HOST_GENERIC=m/CONFIG_PCI_HOST_GENERIC=y/' ${B}/.config
+    sed -i 's/CONFIG_PCI_HOST_COMMON=m/CONFIG_PCI_HOST_COMMON=y/' ${B}/.config
 
-    # CRITICAL: Enable Tegra PCIe host controller driver as built-in
-    # This is required to initialize the PCIe controllers that NVMe is connected to
-    sed -i 's/CONFIG_PCIE_TEGRA194=m/CONFIG_PCIE_TEGRA194=y/' ${B}/.config
-    sed -i 's/CONFIG_PCIE_TEGRA194_HOST=m/CONFIG_PCIE_TEGRA194_HOST=y/' ${B}/.config
+    # Disable Tegra Hypervisor driver - OOT provides tegra_hv
+    # Without this, OOT tegra_hv module fails with "exported twice" errors
+    sed -i 's/CONFIG_TEGRA_HV_DRIVER=y/# CONFIG_TEGRA_HV_DRIVER is not set/' ${B}/.config
+    sed -i 's/CONFIG_TEGRA_HV_DRIVER=m/# CONFIG_TEGRA_HV_DRIVER is not set/' ${B}/.config
 
-    # Run olddefconfig to resolve any dependency conflicts
+    # Disable in-tree Tegra HOST1X driver - OOT module provides this for OpenRM GPU driver
+    # The OOT host1x.ko module must be used instead of in-tree to avoid symbol conflicts
+    sed -i 's/CONFIG_TEGRA_HOST1X=y/# CONFIG_TEGRA_HOST1X is not set/' ${B}/.config
+    sed -i 's/CONFIG_TEGRA_HOST1X=m/# CONFIG_TEGRA_HOST1X is not set/' ${B}/.config
+    # Disable HOST1X firewall (depends on HOST1X driver)
+    sed -i 's/CONFIG_TEGRA_HOST1X_FIREWALL=y/# CONFIG_TEGRA_HOST1X_FIREWALL is not set/' ${B}/.config
+    # ENABLE HOST1X context bus - OOT host1x module requires this symbol from the kernel
+    # The patch 0004-host1x-Make-context_bus-build-independently.patch makes this possible
+    sed -i 's/# CONFIG_TEGRA_HOST1X_CONTEXT_BUS is not set/CONFIG_TEGRA_HOST1X_CONTEXT_BUS=y/' ${B}/.config
+    if ! grep -q "CONFIG_TEGRA_HOST1X_CONTEXT_BUS=y" ${B}/.config; then
+        echo "CONFIG_TEGRA_HOST1X_CONTEXT_BUS=y" >> ${B}/.config
+    fi
+
+    # Disable DRM_TEGRA - not needed for OpenRM stack
+    sed -i 's/CONFIG_DRM_TEGRA=y/# CONFIG_DRM_TEGRA is not set/' ${B}/.config
+    sed -i 's/CONFIG_DRM_TEGRA=m/# CONFIG_DRM_TEGRA is not set/' ${B}/.config
+
+    # Disable max96712 video serializer driver - OOT provides it
+    sed -i 's/CONFIG_VIDEO_MAX96712=y/# CONFIG_VIDEO_MAX96712 is not set/' ${B}/.config
+    sed -i 's/CONFIG_VIDEO_MAX96712=m/# CONFIG_VIDEO_MAX96712 is not set/' ${B}/.config
+
+    # Run olddefconfig again to resolve any dependencies
     oe_runmake -C ${S} O=${B} olddefconfig
-
-    # Verify the changes
-    bbwarn "NVMe and Tegra PCIe configuration after modification:"
-    grep "CONFIG_NVME\|CONFIG_PCIE_TEGRA" ${B}/.config || true
 }
 
 # Manual extraction to handle nested tarballs
@@ -126,7 +149,8 @@ python do_patch:prepend() {
     workdir = d.getVar('WORKDIR')
 
     patches = [
-        '0002-pci-host-generic-Add-support-for-nvidia-tegra264-pcie.patch'
+        '0002-pci-host-generic-Add-support-for-nvidia-tegra264-pcie.patch',
+        '0004-host1x-Make-context_bus-build-independently.patch'
     ]
 
     for patch_name in patches:
