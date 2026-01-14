@@ -21,6 +21,8 @@ FILES_libv4l:remove:tegra = "${libdir}/libv4l/plugins/*.so"
 
 TEGRA_PLUGINS ?= ""
 TEGRA_PLUGINS:tegra = "tegra-libraries-multimedia-v4l"
+# Thor uses nvidia-l4t-multimedia-v4l which provides tegra-libraries-multimedia-v4l
+TEGRA_PLUGINS:jetson-agx-thor-devkit = "nvidia-l4t-multimedia-v4l"
 RRECOMMENDS:libv4l += "${TEGRA_PLUGINS}"
 
 PACKAGE_ARCH:tegra = "${TEGRA_PKGARCH}"

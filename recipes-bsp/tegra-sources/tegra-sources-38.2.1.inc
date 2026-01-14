@@ -1,18 +1,42 @@
 # Jetson Linux R38.2.1 source packages
 
-L4T_VERSION = "38.2.1"
+L4T_BSP_NAME = "${L4T_SRCS_NAME}"
+SRC_URI = "${L4T_URI_BASE}/public_sources.tbz2;downloadfilename=${L4T_BSP_PREFIX}-public_sources-${L4T_VERSION}.tbz2"
+SRC_URI[sha256sum] = "460b0e9143cde12bbb83d74e464e1992596265ec57fc3ca08bf57b4dd6b6bb16"
 
-L4T_URI_BASE = "https://developer.nvidia.com/downloads/embedded/L4T/r38_Release_v2.1"
+inherit l4t_bsp
 
-SRC_URI = " \
-    ${L4T_URI_BASE}/sources/public_sources.tbz2;name=l4t_sources \
-"
+unpack_tar_in_tar() {
+    cd ${WORKDIR}
+    for subarchive in ${TEGRA_SRC_SUBARCHIVE}; do
+        tar -x -j -f ${SRC_ARCHIVE} $subarchive --to-command="tar -x -j --no-same-owner -f- ${TEGRA_SRC_SUBARCHIVE_OPTS}"
+    done
+    if [ -n "${TEGRA_SRC_EXTRA_SUBARCHIVE}" ]; then
+        tar -x -j -f ${SRC_ARCHIVE} ${TEGRA_SRC_EXTRA_SUBARCHIVE} --to-command="tar -x -j --no-same-owner -f- ${TEGRA_SRC_EXTRA_SUBARCHIVE_OPTS}"
+    fi
+}
 
-# Note: Add SHA256 checksums after downloading the packages
-# SRC_URI[l4t_sources.sha256sum] = "add_checksum_here"
+python do_unpack() {
+    src_uri = (d.getVar('SRC_URI') or "").split()
+    rootdir = d.getVar('WORKDIR')
+    p_dir = os.path.join(d.getVar('S'), 'patches')
+    bb.utils.remove(p_dir, True)
+    try:
+        fetcher = bb.fetch2.Fetch(src_uri, d)
+    except bb.fetch2.BBFetchException as e:
+        raise bb.build.FuncFailed(e)
+    other_src_uris = []
+    for s in src_uri:
+        urldata = fetcher.ud[s]
+        urldata.setup_localpath(d)
+        if urldata.localpath.endswith(".tbz2"):
+            d.setVar('SRC_ARCHIVE', urldata.localpath)
+            bb.build.exec_func("unpack_tar_in_tar", d)
+        else:
+            other_src_uris.append(s)
+    if other_src_uris:
+        fetcher.unpack(d.getVar('WORKDIR'), urls=other_src_uris)
+}
 
 COMPATIBLE_MACHINE = "(tegra234)"
-
-S = "${TMPDIR}/work-shared/L4T-${L4T_VERSION}-sources"
-
-LIC_FILES_CHKSUM = "file://LICENSE;md5=d15d5e908fbcca3e6b32dbf74ab65a44"
+PACKAGE_ARCH = "${L4T_BSP_PKGARCH}"

@@ -1,8 +1,8 @@
 OpenEmbedded/Yocto BSP layer for NVIDIA Jetson Modules
 ======================================================
 
-Jetson Linux release: R36.4.4
-JetPack release:      6.2.1
+Jetson Linux release: R38.2.1
+JetPack release:      7
 
 Boards supported:
 * Jetson AGX Orin development kit
@@ -70,14 +70,13 @@ This branch adds support for the NVIDIA Jetson AGX Thor Developer Kit with
 Jetson Linux R38.2.1 (JetPack 7.0).
 
 ### Key Features:
-- Ubuntu 24.04 LTS base
 - Linux Kernel 6.8
 - SBSA (Server Base System Architecture) support
 - CUDA 13.0
 - cuDNN 9.12
 - TensorRT 10.13
 - OpenRM-based stack
-- Based on Tegra234 SoC (same as Orin)
+- Based on Tegra264 SoC (not the same as Orin)
 
 ### Supported Hardware:
 - Jetson AGX Thor Developer Kit

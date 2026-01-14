@@ -60,19 +60,19 @@ do_install() {
             fi
         done
 
-        # Install GB10B GPU firmware (Blackwell architecture for Thor dGPU)
-        # This firmware is required for the discrete GPU (device 10de:2b00)
-        if [ -d ${WORKDIR}/nvidia_drivers/lib/firmware/nvidia/gb10b ]; then
-            bbnote "Installing GB10B GPU firmware"
-            install -d ${D}/lib/firmware/nvidia/gb10b
-            install -m 644 ${WORKDIR}/nvidia_drivers/lib/firmware/nvidia/gb10b/* ${D}/lib/firmware/nvidia/gb10b/
+        # Install ALL firmware from the BSP package
+        # This includes GPU, video codec (nvenc/nvdec), VIC, PVA, NVDLA, etc.
+        if [ -d ${WORKDIR}/nvidia_drivers/lib/firmware ]; then
+            bbnote "Installing all firmware from BSP"
+            install -d ${D}/lib/firmware
+            cp -a ${WORKDIR}/nvidia_drivers/lib/firmware/* ${D}/lib/firmware/
         fi
 
-        # Install GA10B firmware (integrated Tegra GPU)
-        if [ -d ${WORKDIR}/nvidia_drivers/lib/firmware/nvidia/ga10b ]; then
-            bbnote "Installing GA10B GPU firmware"
-            install -d ${D}/lib/firmware/nvidia/ga10b
-            install -m 644 ${WORKDIR}/nvidia_drivers/lib/firmware/nvidia/ga10b/* ${D}/lib/firmware/nvidia/ga10b/
+        # Install V4L2 plugins for multimedia
+        if [ -d ${WORKDIR}/nvidia_drivers/usr/lib/aarch64-linux-gnu/libv4l/plugins ]; then
+            bbnote "Installing V4L2 plugins"
+            install -d ${D}${libdir}/libv4l/plugins/nv
+            cp -a ${WORKDIR}/nvidia_drivers/usr/lib/aarch64-linux-gnu/libv4l/plugins/nv/* ${D}${libdir}/libv4l/plugins/nv/
         fi
     fi
 
@@ -83,12 +83,22 @@ do_install() {
     echo "${libdir}/nvidia" > ${D}${sysconfdir}/ld.so.conf.d/nvidia.conf
 }
 
-# Skip rpm dependency generation - we provide many libraries that have
+# Skip auto rpm dependency generation - we provide many libraries that have
 # GUI dependencies which aren't satisfied in a minimal image
 SKIP_FILEDEPS = "1"
 
+# Explicitly provide shlibs that other packages depend on
+# This allows dnf to resolve dependencies correctly
+RPROVIDES:${PN} = " \
+    libnvbufsurface.so.1.0.0()(64bit) \
+    libnvbufsurftransform.so.1.0.0()(64bit) \
+    libnvbufsurface.so()(64bit) \
+    libnvbufsurftransform.so()(64bit) \
+    libv4l2.so.0()(64bit) \
+"
+
 PACKAGES = "${PN}"
-FILES:${PN} = "${libdir} /lib/firmware/nvidia ${sysconfdir}/ld.so.conf.d"
+FILES:${PN} = "${libdir} /lib/firmware ${sysconfdir}/ld.so.conf.d"
 
 ALLOW_EMPTY:${PN} = "1"
 INHIBIT_PACKAGE_STRIP = "1"

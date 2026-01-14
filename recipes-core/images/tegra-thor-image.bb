@@ -51,11 +51,43 @@ IMAGE_INSTALL += " \
     alsa-lib \
 "
 
+# Add V4L2 video support for nvenc/nvdec
+IMAGE_INSTALL += " \
+    v4l-utils \
+"
+
+# Add NVIDIA multimedia libraries (NVENC/NVDEC video codec)
+IMAGE_INSTALL += " \
+    nvidia-l4t-multimedia \
+    nvidia-l4t-multimedia-v4l \
+    nvidia-l4t-video-codec \
+    video-codec-test \
+"
+
+# Add GStreamer with NVIDIA V4L2 video encoder/decoder plugin
+# Note: OpenGL/EGL plugins disabled until tegra-libraries-eglcore is available
+# The bbappend files disable GL deps so plugins-base and plugins-good can build
+IMAGE_INSTALL += " \
+    gstreamer1.0 \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    libgstnvcustomhelper \
+    gstreamer1.0-plugins-nvvideo4linux2 \
+    libegl-stub \
+"
+
 # Add NVIDIA Tegra BSP packages
 IMAGE_INSTALL += " \
     tegra-firmware \
     tegra-libraries-core \
     tegra-configs-alsa \
+"
+
+# Add tegra_fuse shim module for chip detection
+# NvMedia libraries (libnvsocsys.so) expect /sys/module/tegra_fuse/parameters/tegra_chip_id
+# This module creates that sysfs entry with Thor's chip ID (38 = 0x26 = Tegra264)
+IMAGE_INSTALL += " \
+    tegra-fuse-shim \
 "
 
 # Add NVIDIA CUDA driver libraries and toolkit
