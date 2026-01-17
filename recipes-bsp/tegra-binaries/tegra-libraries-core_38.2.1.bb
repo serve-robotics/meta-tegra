@@ -74,13 +74,34 @@ do_install() {
             install -d ${D}${libdir}/libv4l/plugins/nv
             cp -a ${WORKDIR}/nvidia_drivers/usr/lib/aarch64-linux-gnu/libv4l/plugins/nv/* ${D}${libdir}/libv4l/plugins/nv/
         fi
+
+        # Install NVIDIA EGL driver (libEGL_nvidia.so.0) and GLVND configuration
+        # This is required for EGL device rendering without X11/Wayland
+        if [ -d ${WORKDIR}/nvidia_drivers/usr/lib/aarch64-linux-gnu/tegra-egl ]; then
+            bbnote "Installing NVIDIA EGL driver from tegra-egl"
+            install -d ${D}${libdir}/tegra-egl
+            cp -a ${WORKDIR}/nvidia_drivers/usr/lib/aarch64-linux-gnu/tegra-egl/* ${D}${libdir}/tegra-egl/
+        fi
+
+        # Install GLVND vendor configuration for NVIDIA
+        # This tells libEGL.so (GLVND) to use libEGL_nvidia.so.0
+        # Create symlink pointing to correct Yocto path (not Ubuntu path)
+        install -d ${D}${datadir}/glvnd/egl_vendor.d
+        ln -sf ${libdir}/tegra-egl/nvidia.json ${D}${datadir}/glvnd/egl_vendor.d/10_nvidia.json
+
+        # Install EGL external platform configuration directory
+        if [ -d ${WORKDIR}/nvidia_drivers/usr/share/egl/egl_external_platform.d ]; then
+            install -d ${D}${datadir}/egl/egl_external_platform.d
+            cp -a ${WORKDIR}/nvidia_drivers/usr/share/egl/egl_external_platform.d/* ${D}${datadir}/egl/egl_external_platform.d/ 2>/dev/null || true
+        fi
     fi
 
-    # Create ld.so.conf.d entry for /usr/lib/nvidia
-    # This ensures libraries in /usr/lib/nvidia are found by the dynamic linker
+    # Create ld.so.conf.d entries for NVIDIA libraries
+    # This ensures libraries are found by the dynamic linker
     # ldconfig will pick this up automatically on first boot
     install -d ${D}${sysconfdir}/ld.so.conf.d
     echo "${libdir}/nvidia" > ${D}${sysconfdir}/ld.so.conf.d/nvidia.conf
+    echo "${libdir}/tegra-egl" >> ${D}${sysconfdir}/ld.so.conf.d/nvidia.conf
 }
 
 # Skip auto rpm dependency generation - we provide many libraries that have
@@ -98,7 +119,7 @@ RPROVIDES:${PN} = " \
 "
 
 PACKAGES = "${PN}"
-FILES:${PN} = "${libdir} /lib/firmware ${sysconfdir}/ld.so.conf.d"
+FILES:${PN} = "${libdir} /lib/firmware ${sysconfdir}/ld.so.conf.d ${datadir}/glvnd ${datadir}/egl"
 
 ALLOW_EMPTY:${PN} = "1"
 INHIBIT_PACKAGE_STRIP = "1"

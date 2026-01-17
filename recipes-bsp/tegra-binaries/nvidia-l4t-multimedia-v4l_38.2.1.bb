@@ -1,7 +1,7 @@
-SUMMARY = "NVIDIA L4T V4L2 video codec libraries (NvGPU/NvMMLite)"
-DESCRIPTION = "V4L2 video codec wrapper libraries using NvMMLite from NVIDIA L4T R38.2.1 for Jetson Thor. \
-These libraries use the NvMMLite encoder path which works on Thor, as opposed to the CUVID/NVENC path \
-which returns UNSUPPORTED_DEVICE on Thor's GB10B GPU."
+SUMMARY = "NVIDIA L4T V4L2 video codec libraries (NvGPU + OpenRM/CUVID)"
+DESCRIPTION = "V4L2 video codec wrapper libraries from NVIDIA L4T R38.2.1 for Jetson Thor. \
+Includes both nvgpu (NvMMLite) and openrm (CUVID) packages. Thor video decode uses the CUVID \
+path via /dev/nvidia0 with LD_PRELOAD=libnvcuvidv4l2.so and AARCH64_DGPU=1 environment variables."
 LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = ""
 
@@ -9,14 +9,18 @@ COMPATIBLE_MACHINE = "(tegra234)"
 
 inherit bin_package
 
-# Thor requires the nvgpu multimedia package which uses NvMMLite for video encoding
-# The NvMMLite path works on Thor while the CUVID/NVENC path does not
-# Key libraries:
-#   - libtegrav4l2.so: V4L2 wrapper using NvMMLite (WORKS)
-#   - libv4l2_nvvideocodec.so: V4L2 plugin using NvMMLite (WORKS)
-# NOT using nvidia-l4t-multimedia-openrm which has:
-#   - libnvcuvidv4l2.so: Uses NVENC SDK directly (FAILS with UNSUPPORTED_DEVICE)
-SRC_URI = "file://nvidia-l4t-multimedia-nvgpu_38.2.1-20250910123945_arm64.deb;subdir=${BP}"
+# Thor video decode requires CUVID path (not traditional V4L2 /dev/v4l2-nvdec):
+#   - nvgpu package: libtegrav4l2.so, libv4l2_nvvideocodec.so (NvMMLite path)
+#   - openrm package: libnvcuvidv4l2.so, libv4l2_nvcuvidvideocodec.so (CUVID path)
+#
+# Working decode command:
+#   LD_PRELOAD=/usr/lib/nvidia/libnvcuvidv4l2.so AARCH64_DGPU=1 \
+#     gst-launch-1.0 filesrc location=video.mp4 ! qtdemux ! h264parse ! nvv4l2decoder ! fakesink
+# nvgpu from R38.2.1, openrm from R38.4.0 (compatible - provides CUVID wrapper)
+SRC_URI = " \
+    file://nvidia-l4t-multimedia-nvgpu_38.2.1-20250910123945_arm64.deb;subdir=${BP} \
+    file://nvidia-l4t-multimedia-openrm_38.4.0-20251230160601_arm64.deb;subdir=${BP} \
+"
 
 S = "${WORKDIR}/${BP}"
 
@@ -33,7 +37,8 @@ do_unpack:append() {
     bp = d.getVar('BP')
     s = os.path.join(workdir, bp)
 
-    for deb in ['nvidia-l4t-multimedia-nvgpu_38.2.1-20250910123945_arm64.deb']:
+    for deb in ['nvidia-l4t-multimedia-nvgpu_38.2.1-20250910123945_arm64.deb',
+                 'nvidia-l4t-multimedia-openrm_38.4.0-20251230160601_arm64.deb']:
         deb_path = os.path.join(s, deb)
         if os.path.exists(deb_path):
             # Extract deb using ar and tar
@@ -100,6 +105,20 @@ do_install() {
     elif [ -e "${D}${libdir}/nvidia/libv4l2_nvvideocodec.so" ]; then
         ln -sf nvidia/libv4l2_nvvideocodec.so ${D}${libdir}/libv4l2_nvvideocodec.so
         bbnote "Created symlink: libv4l2_nvvideocodec.so -> nvidia/libv4l2_nvvideocodec.so"
+    fi
+
+    # libv4l2_nvcuvidvideocodec.so - CUVID V4L2 plugin (from openrm package)
+    # This is loaded by libnvv4l2.so when plugins are enumerated
+    if [ -e "${D}${libdir}/nvidia/libv4l2_nvcuvidvideocodec.so" ]; then
+        ln -sf ../../../nvidia/libv4l2_nvcuvidvideocodec.so ${D}${libdir}/libv4l/plugins/nv/libv4l2_nvcuvidvideocodec.so
+        bbnote "Created symlink: plugins/nv/libv4l2_nvcuvidvideocodec.so -> nvidia/libv4l2_nvcuvidvideocodec.so"
+    fi
+
+    # libnvcuvidv4l2.so - CUVID V4L2 wrapper (preloaded via LD_PRELOAD)
+    if [ -e "${D}${libdir}/nvidia/libnvcuvidv4l2.so" ]; then
+        bbnote "Found libnvcuvidv4l2.so for CUVID decode path"
+    else
+        bbwarn "libnvcuvidv4l2.so not found - CUVID decode will not work"
     fi
 }
 

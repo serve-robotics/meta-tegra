@@ -1,0 +1,60 @@
+# GStreamer 1.24.12 for Jetson Thor
+# Required for NVIDIA GStreamer plugins (nvvidconv, etc.)
+
+SUMMARY = "GStreamer 1.0 multimedia framework"
+DESCRIPTION = "GStreamer is a multimedia framework for encoding and decoding video and sound."
+HOMEPAGE = "http://gstreamer.freedesktop.org/"
+BUGTRACKER = "https://bugzilla.gnome.org/enter_bug.cgi?product=Gstreamer"
+SECTION = "multimedia"
+LICENSE = "LGPL-2.1-or-later"
+
+DEPENDS = "glib-2.0 glib-2.0-native libxml2 bison-native flex-native"
+
+inherit meson pkgconfig gettext upstream-version-is-even gobject-introspection
+
+LIC_FILES_CHKSUM = "file://COPYING;md5=69333daa044cb77e486cc36129f7a770 \
+                    file://gst/gst.h;beginline=1;endline=21;md5=e059138481205ee2c6fc1c079c016d0d"
+
+S = "${WORKDIR}/gstreamer-${PV}"
+
+SRC_URI = "https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-${PV}.tar.xz"
+SRC_URI[sha256sum] = "b3522d1b4fe174fff3b3c7f0603493e2367bd1c43f5804df15b634bd22b1036f"
+
+PACKAGECONFIG ??= "check debug tools"
+
+PACKAGECONFIG[debug] = "-Dgst_debug=true,-Dgst_debug=false"
+PACKAGECONFIG[tracer-hooks] = "-Dtracer_hooks=true,-Dtracer_hooks=false"
+PACKAGECONFIG[coretracers] = "-Dcoretracers=enabled,-Dcoretracers=disabled"
+PACKAGECONFIG[check] = "-Dcheck=enabled,-Dcheck=disabled"
+PACKAGECONFIG[tests] = "-Dtests=enabled,-Dtests=disabled"
+PACKAGECONFIG[unwind] = "-Dlibunwind=enabled,-Dlibunwind=disabled,libunwind"
+PACKAGECONFIG[dw] = "-Dlibdw=enabled,-Dlibdw=disabled,elfutils"
+PACKAGECONFIG[bash-completion] = "-Dbash-completion=enabled,-Dbash-completion=disabled,bash-completion"
+PACKAGECONFIG[tools] = "-Dtools=enabled,-Dtools=disabled"
+
+def gettext_oemeson(d):
+    if d.getVar('USE_NLS') == 'no':
+        return '-Dnls=disabled'
+    if d.getVar('INHIBIT_DEFAULT_DEPS') and not oe.utils.inherits(d, 'cross-canadian'):
+        return '-Dnls=disabled'
+    return '-Dnls=enabled'
+
+EXTRA_OEMESON += " \
+    -Ddoc=disabled \
+    -Dexamples=disabled \
+    -Ddbghelp=disabled \
+    -Dintrospection=disabled \
+    ${@gettext_oemeson(d)} \
+"
+
+GIR_MESON_ENABLE_FLAG = "enabled"
+GIR_MESON_DISABLE_FLAG = "disabled"
+
+PACKAGES += "${PN}-bash-completion"
+
+FILES:${PN} += "${libdir}/gstreamer-1.0/*.so"
+FILES:${PN}-dev += "${libdir}/gstreamer-1.0/*.a ${libdir}/gstreamer-1.0/include"
+FILES:${PN}-bash-completion += "${datadir}/bash-completion/completions/ ${datadir}/bash-completion/helpers/gst*"
+FILES:${PN}-dbg += "${datadir}/gdb ${datadir}/gstreamer-1.0/gdb"
+
+CVE_PRODUCT = "gstreamer"

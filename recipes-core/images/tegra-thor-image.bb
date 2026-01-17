@@ -65,15 +65,42 @@ IMAGE_INSTALL += " \
 "
 
 # Add GStreamer with NVIDIA V4L2 video encoder/decoder plugin
-# Note: OpenGL/EGL plugins disabled until tegra-libraries-eglcore is available
-# The bbappend files disable GL deps so plugins-base and plugins-good can build
+# videoparsersbad provides h264parse/h265parse needed by nvv4l2decoder
+# nvidia-l4t-gstreamer provides nvvidconv for NVMM→CPU memory conversion
+# libglvnd provides EGL dispatcher that routes to NVIDIA's libEGL_nvidia.so.0
+# gst-libav provides software fallback decoders (avdec_h264, avdec_aac)
 IMAGE_INSTALL += " \
     gstreamer1.0 \
     gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad-videoparsersbad \
+    gstreamer1.0-plugins-good-isomp4 \
+    libgstcodecparsers-1.0 \
     libgstnvcustomhelper \
     gstreamer1.0-plugins-nvvideo4linux2 \
-    libegl-stub \
+    nvidia-l4t-gstreamer \
+    libglvnd \
+    gstreamer1.0-libav \
+"
+
+# Add DRM/KMS video output support for HDMI display
+# kmssink provides hardware-accelerated video output to DRM displays
+# fbdevsink provides framebuffer video output (fallback for NVIDIA DRM which lacks dumb buffer support)
+# libdrm-tests includes modetest for debugging display connectors
+# nvidia-display-driver provides prebuilt nvidia.ko/nvidia-modeset.ko/nvidia-drm.ko
+# for tegra264-display support (from L4T openrm packages)
+IMAGE_INSTALL += " \
+    gstreamer1.0-plugins-bad-kms \
+    gstreamer1.0-plugins-bad-fbdevsink \
+    libdrm-tests \
+    nvidia-display-driver \
+"
+
+# Add FFmpeg/ffplay for video playback
+# SDL2 configured for fbdev output (kmsdrm requires GBM which needs unavailable tegra-mmapi)
+IMAGE_INSTALL += " \
+    ffmpeg \
+    libsdl2 \
 "
 
 # Add NVIDIA Tegra BSP packages
@@ -125,7 +152,34 @@ IMAGE_OVERHEAD_FACTOR = "1.5"
 
 # Create files needed by NVIDIA flash scripts
 # The NVIDIA flash tools expect these Ubuntu/Debian-specific files
-ROOTFS_POSTPROCESS_COMMAND += "create_nvidia_flash_files; blacklist_nouveau; create_nvidia_devices_init; "
+ROOTFS_POSTPROCESS_COMMAND += "create_nvidia_flash_files; blacklist_nouveau; create_nvidia_devices_init; create_nvidia_video_env; "
+
+create_nvidia_video_env() {
+    # Create environment script for NVIDIA video decode on Thor
+    # Thor uses CUVID path (not traditional V4L2), requires these settings:
+    # - LD_PRELOAD for libnvcuvidv4l2.so to intercept V4L2 calls
+    # - AARCH64_DGPU=1 to force GStreamer nvvideo4linux2 to use CUVID path
+    # See: https://docs.nvidia.com/jetson/archives/r38.2.1/DeveloperGuide/SD/Multimedia/AcceleratedGstreamer.html
+    install -d ${IMAGE_ROOTFS}/etc/profile.d
+    cat > ${IMAGE_ROOTFS}/etc/profile.d/nvidia-video.sh << 'EOF'
+# NVIDIA Video Codec Environment for Jetson Thor
+# Thor uses CUVID path (not traditional V4L2 path)
+
+# LD_PRELOAD to intercept V4L2 calls and route to CUVID
+export LD_PRELOAD=/usr/lib/nvidia/libnvcuvidv4l2.so
+
+# Force GStreamer nvvideo4linux2 plugin to use CUVID path
+# (Thor has nvgpu loaded but needs CUVID, not V4L2)
+export AARCH64_DGPU=1
+EOF
+    chmod 644 ${IMAGE_ROOTFS}/etc/profile.d/nvidia-video.sh
+
+    # Create symlink for libv4l2 plugins
+    # libnvv4l2.so looks for plugins in /usr/lib/aarch64-linux-gnu/libv4l/plugins/nv/
+    # but on Yocto they are installed to /usr/lib/libv4l/plugins/nv/
+    install -d ${IMAGE_ROOTFS}/usr/lib/aarch64-linux-gnu/libv4l/plugins
+    ln -sf /usr/lib/libv4l/plugins/nv ${IMAGE_ROOTFS}/usr/lib/aarch64-linux-gnu/libv4l/plugins/nv
+}
 
 blacklist_nouveau() {
     # Blacklist nouveau driver to prevent it from binding to the GPU
@@ -140,25 +194,43 @@ EOF
 }
 
 create_nvidia_devices_init() {
-    # Create init script to load nvgpu GPU driver on boot
+    # Create init script to load nvgpu GPU driver and display driver on boot
     # nvgpu is the Tegra GPU driver that supports GB10B (Thor discrete GPU)
+    # nvidia/nvidia-modeset/nvidia-drm are the display driver modules for HDMI output
     # Device nodes are created automatically by devtmpfs when the driver loads
     install -d ${IMAGE_ROOTFS}/etc/init.d
     install -d ${IMAGE_ROOTFS}/etc/rcS.d
 
-    # Write the nvgpu init script
+    # Write the nvidia init script
     printf '%s\n' '#!/bin/sh' > ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
-    printf '%s\n' '# Load nvgpu GPU driver for Jetson Thor' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
-    printf '%s\n' '# nvgpu supports the GB10B discrete GPU (device 10de:2b00)' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# Load NVIDIA GPU and display drivers for Jetson Thor' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# nvgpu: supports GB10B discrete GPU (device 10de:2b00)' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# nvidia/nvidia-modeset/nvidia-drm: display driver for tegra264-display' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
     printf '%s\n' '' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
-    printf '%s\n' '# Load host1x first (required by nvgpu)' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# Load host1x first (required by nvgpu and display)' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
     printf '%s\n' 'modprobe host1x 2>/dev/null || true' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
     printf '%s\n' '' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
-    printf '%s\n' '# Load nvgpu driver' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# Load nvgpu driver for CUDA/GPU compute' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
     printf '%s\n' 'modprobe nvgpu 2>/dev/null || true' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
     printf '%s\n' '' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
-    printf '%s\n' '# Set permissions on nvgpu device nodes' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# Load nvidia display driver modules for HDMI output' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# Order: nvidia -> nvidia-modeset -> nvidia-drm' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' 'modprobe nvidia 2>/dev/null || true' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' 'modprobe nvidia-modeset 2>/dev/null || true' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' 'modprobe nvidia-drm modeset=1 2>/dev/null || true' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# Set permissions on GPU device nodes' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
     printf '%s\n' 'for dev in /dev/nvhost-ctrl-gpu /dev/nvhost-gpu /dev/nvhost-as-gpu /dev/nvhost-dbg-gpu; do' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '    [ -e "$dev" ] && chmod 666 "$dev"' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' 'done' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# Set permissions on nvidia device nodes' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' 'for dev in /dev/nvidia0 /dev/nvidiactl /dev/nvidia-modeset; do' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '    [ -e "$dev" ] && chmod 666 "$dev"' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' 'done' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' '# Set permissions on DRM device nodes' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
+    printf '%s\n' 'for dev in /dev/dri/card* /dev/dri/renderD*; do' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
     printf '%s\n' '    [ -e "$dev" ] && chmod 666 "$dev"' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
     printf '%s\n' 'done' >> ${IMAGE_ROOTFS}/etc/init.d/nvidia-devices
 

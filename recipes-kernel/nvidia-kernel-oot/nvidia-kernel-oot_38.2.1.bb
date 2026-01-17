@@ -251,9 +251,13 @@ do_compile() {
             modules || bbnote "nvgpu build failed, continuing..."
     fi
 
-    # Note: We no longer build unifiedgpudisp (nvidia.ko) because Thor's discrete
-    # GPU uses nvgpu driver, not the GSP-based unifiedgpudisp driver.
-    # The unifiedgpudisp driver only supports GA10x/TU10x GPUs with GSP firmware.
+    # NOTE: Display driver (nvidia.ko, nvidia-modeset.ko, nvidia-drm.ko) from
+    # unifiedgpudisp is NOT built because it requires proprietary binary blobs
+    # (nv-kernel.o_binary) that are not included in the public sources.
+    # The unifiedgpudisp nvidia.ko has the "nvidia,tegra264-display" compatible
+    # string needed for Thor's display controller, but cannot be built from
+    # public sources alone.
+    # HDMI/DP display output is not available with the open-source Yocto build.
 }
 
 do_install() {
