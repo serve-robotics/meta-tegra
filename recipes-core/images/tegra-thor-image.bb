@@ -110,6 +110,12 @@ IMAGE_INSTALL += " \
     tegra-configs-alsa \
 "
 
+# Add NVIDIA system tools (tegrastats, jetson_clocks, nvpmodel)
+IMAGE_INSTALL += " \
+    nvidia-l4t-tools \
+    nvidia-l4t-nvpmodel \
+"
+
 # Add tegra_fuse shim module for chip detection
 # NvMedia libraries (libnvsocsys.so) expect /sys/module/tegra_fuse/parameters/tegra_chip_id
 # This module creates that sysfs entry with Thor's chip ID (38 = 0x26 = Tegra264)
