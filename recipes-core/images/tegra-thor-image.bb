@@ -110,10 +110,11 @@ IMAGE_INSTALL += " \
     tegra-configs-alsa \
 "
 
-# Add NVIDIA system tools (tegrastats, jetson_clocks, nvpmodel)
+# Add NVIDIA system tools (tegrastats, jetson_clocks, nvpmodel, nvidia-smi)
 IMAGE_INSTALL += " \
     nvidia-l4t-tools \
     nvidia-l4t-nvpmodel \
+    nvidia-l4t-nvml \
 "
 
 # Add tegra_fuse shim module for chip detection

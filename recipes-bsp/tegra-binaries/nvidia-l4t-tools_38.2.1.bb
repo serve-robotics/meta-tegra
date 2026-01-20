@@ -46,6 +46,47 @@ do_unpack:append() {
                 os.remove(p)
 }
 
+# Apply Thor compatibility fixes using sed (more robust than patch for this file)
+do_patch() {
+    SCRIPT="${S}/usr/bin/jetson_clocks"
+
+    # 1. Fix systemctl calls in do_fan() to support sysvinit
+    # Replace direct systemctl calls with command existence check
+    sed -i 's/NVFANCONTROL_STATUS="\$(systemctl is-active nvfancontrol)"/NVFANCONTROL_STATUS="\$(command -v systemctl \&> \/dev\/null \&\& systemctl is-active nvfancontrol 2>\/dev\/null || echo inactive)"/' "$SCRIPT"
+    sed -i 's/NVSPISERVER_STATUS="\$(systemctl is-active nv-spi-server)"/NVSPISERVER_STATUS="\$(command -v systemctl \&> \/dev\/null \&\& systemctl is-active nv-spi-server 2>\/dev\/null || echo inactive)"/' "$SCRIPT"
+
+    # 2. Fix systemctl stop nvfancontrol in do_fan()
+    sed -i 's/systemctl stop nvfancontrol$/command -v systemctl \&> \/dev\/null \&\& systemctl stop nvfancontrol 2>\/dev\/null || true/' "$SCRIPT"
+
+    # 3. Fix systemctl calls in fan_restore()
+    sed -i 's/systemctl start nvfancontrol$/command -v systemctl \&> \/dev\/null \&\& systemctl start nvfancontrol 2>\/dev\/null || true/' "$SCRIPT"
+    sed -i 's/systemctl stop nvfancontrol$/command -v systemctl \&> \/dev\/null \&\& systemctl stop nvfancontrol 2>\/dev\/null || true/' "$SCRIPT"
+
+    # 4. Combine tegra234 and tegra264 EMC cases since Thor uses identical interface
+    # Replace "tegra234)" with "tegra234 | tegra264)" to share the emc_cap logic
+    sed -i 's/^\([[:space:]]*\)tegra234)$/\1tegra234 | tegra264)/' "$SCRIPT"
+
+    # 5. Remove the separate tegra264 case (it's now merged with tegra234)
+    # Delete from "tegra264)" line to the next ";;" within do_emc function
+    sed -i '/do_emc/,/^do_/{
+        /^[[:space:]]*tegra264)$/,/^[[:space:]]*;;$/{
+            /^[[:space:]]*tegra264)$/d
+            /^[[:space:]]*EMC_MIN_FREQ.*devfreq/d
+            /^[[:space:]]*EMC_MAX_FREQ.*devfreq/d
+            /^[[:space:]]*EMC_CUR_FREQ.*devfreq/d
+            /^[[:space:]]*EMC_UPDATE_FREQ.*devfreq/d
+            /^[[:space:]]*;;$/d
+        }
+    }' "$SCRIPT"
+
+    # 6. Fix do_emc action cases to include tegra264 (Thor uses same EMC interface as tegra234)
+    sed -i 's/if \[ "\${SOCFAMILY}" = "tegra234" \]/if [ "\${SOCFAMILY}" = "tegra234" ] || [ "\${SOCFAMILY}" = "tegra264" ]/g' "$SCRIPT"
+
+    # 7. Fix FAN_NODES glob to only match pwm[0-9], not pwm*_enable files
+    # pwm1_enable only accepts 0,1,2 (fan mode), not 0-255 (fan speed)
+    sed -i 's|/hwmon\*/pwm\*|/hwmon*/pwm[0-9]|g' "$SCRIPT"
+}
+
 do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
