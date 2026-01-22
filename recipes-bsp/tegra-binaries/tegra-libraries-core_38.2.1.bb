@@ -28,12 +28,16 @@ do_install() {
 
         # Install libraries from aarch64-linux-gnu/nvidia/
         # EXCLUDE libcuda* - those are provided by nvidia-l4t-cuda package
+        # EXCLUDE DLA libraries - Thor has no DLA hardware (confirmed by NVIDIA)
         if [ -d ${WORKDIR}/nvidia_drivers/usr/lib/aarch64-linux-gnu/nvidia ]; then
             for f in ${WORKDIR}/nvidia_drivers/usr/lib/aarch64-linux-gnu/nvidia/*; do
                 fname=$(basename "$f")
                 case "$fname" in
                     libcuda*)
                         bbnote "Skipping $fname - provided by nvidia-l4t-cuda"
+                        ;;
+                    libnvdla*|libnvmedia_dla*|libnvcudla*)
+                        bbnote "Skipping $fname - Thor has no DLA hardware"
                         ;;
                     *)
                         cp -a "$f" ${D}${libdir}/nvidia/
@@ -43,10 +47,19 @@ do_install() {
         fi
 
         # Install root-level libraries from aarch64-linux-gnu/
+        # EXCLUDE DLA libraries - Thor has no DLA hardware
         if [ -d ${WORKDIR}/nvidia_drivers/usr/lib/aarch64-linux-gnu ]; then
             for f in ${WORKDIR}/nvidia_drivers/usr/lib/aarch64-linux-gnu/*.so*; do
                 if [ -f "$f" ] || [ -L "$f" ]; then
-                    cp -a "$f" ${D}${libdir}/ 2>/dev/null || true
+                    fname=$(basename "$f")
+                    case "$fname" in
+                        libnvcudla*)
+                            bbnote "Skipping $fname - Thor has no DLA hardware"
+                            ;;
+                        *)
+                            cp -a "$f" ${D}${libdir}/ 2>/dev/null || true
+                            ;;
+                    esac
                 fi
             done
         fi
@@ -60,12 +73,26 @@ do_install() {
             fi
         done
 
-        # Install ALL firmware from the BSP package
-        # This includes GPU, video codec (nvenc/nvdec), VIC, PVA, NVDLA, etc.
+        # Install firmware from the BSP package
+        # This includes GPU, video codec (nvenc/nvdec), VIC, PVA, etc.
+        # EXCLUDE DLA firmware - Thor has no DLA hardware
         if [ -d ${WORKDIR}/nvidia_drivers/lib/firmware ]; then
-            bbnote "Installing all firmware from BSP"
+            bbnote "Installing firmware from BSP (excluding DLA)"
             install -d ${D}/lib/firmware
-            cp -a ${WORKDIR}/nvidia_drivers/lib/firmware/* ${D}/lib/firmware/
+            # Copy firmware, excluding DLA files
+            find ${WORKDIR}/nvidia_drivers/lib/firmware -type f ! -name '*nvdla*' ! -name '*nvhost_nvdla*' | while read src; do
+                rel="${src#${WORKDIR}/nvidia_drivers/lib/firmware/}"
+                dst="${D}/lib/firmware/${rel}"
+                install -d "$(dirname "$dst")"
+                cp -a "$src" "$dst"
+            done
+            # Copy symlinks
+            find ${WORKDIR}/nvidia_drivers/lib/firmware -type l ! -name '*nvdla*' ! -name '*nvhost_nvdla*' | while read src; do
+                rel="${src#${WORKDIR}/nvidia_drivers/lib/firmware/}"
+                dst="${D}/lib/firmware/${rel}"
+                install -d "$(dirname "$dst")"
+                cp -a "$src" "$dst"
+            done
         fi
 
         # Install V4L2 plugins for multimedia

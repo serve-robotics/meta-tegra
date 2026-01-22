@@ -60,9 +60,14 @@ do_install() {
         for f in ${S}/usr/lib/aarch64-linux-gnu/nvidia/*; do
             fname=$(basename "$f")
             # Skip libraries already in tegra-libraries-core (from nvidia_drivers.tbz2)
+            # Skip DLA libraries - Thor has no DLA hardware (confirmed by NVIDIA)
             case "$fname" in
                 libnvbufsurface*|libnvbufsurftransform*|libnvdsbufferpool*|libnvid_mapper*|libnvbufsurface_nvsci*)
                     bbnote "Skipping $fname - provided by tegra-libraries-core"
+                    continue
+                    ;;
+                libnvdla*|libnvmedia_dla*|libnvcudla*)
+                    bbnote "Skipping $fname - Thor has no DLA hardware"
                     continue
                     ;;
             esac
