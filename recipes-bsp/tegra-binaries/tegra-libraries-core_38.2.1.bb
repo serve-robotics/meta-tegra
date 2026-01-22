@@ -137,12 +137,19 @@ SKIP_FILEDEPS = "1"
 
 # Explicitly provide shlibs that other packages depend on
 # This allows dnf to resolve dependencies correctly
+# Also provide virtual packages for upstream recipe compatibility (cupva, libnvvpi3, etc.)
 RPROVIDES:${PN} = " \
     libnvbufsurface.so.1.0.0()(64bit) \
     libnvbufsurftransform.so.1.0.0()(64bit) \
     libnvbufsurface.so()(64bit) \
     libnvbufsurftransform.so()(64bit) \
     libv4l2.so.0()(64bit) \
+    tegra-libraries-pva \
+    tegra-libraries-nvsci \
+    tegra-libraries-eglcore \
+    tegra-libraries-glescore \
+    tegra-libraries-gbm-backend \
+    tegra-libraries-winsys \
 "
 
 PACKAGES = "${PN}"

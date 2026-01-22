@@ -106,5 +106,6 @@ RDEPENDS:${PN} = "tegra-libraries-core"
 SKIP_FILEDEPS:${PN} = "1"
 
 # Provide cuda-driver virtual and libcuda.so
-PROVIDES = "cuda-driver libcuda"
-RPROVIDES:${PN} = "cuda-driver libcuda.so libcuda.so()(64bit)"
+# Also provide tegra-libraries-cuda for upstream recipe compatibility
+PROVIDES = "cuda-driver libcuda tegra-libraries-cuda"
+RPROVIDES:${PN} = "cuda-driver libcuda.so libcuda.so()(64bit) tegra-libraries-cuda"

@@ -103,7 +103,7 @@ RDEPENDS:${PN} = "tegra-libraries-core"
 # Disable automatic shared library dependency detection
 SKIP_FILEDEPS:${PN} = "1"
 
-# Provide virtual packages
+# Provide virtual packages for upstream recipe compatibility
 # Note: libnvbufsurface.so is provided by tegra-libraries-core
-PROVIDES = "tegra-libraries-multimedia"
-RPROVIDES:${PN} = "tegra-libraries-multimedia"
+PROVIDES = "tegra-libraries-multimedia tegra-libraries-multimedia-utils"
+RPROVIDES:${PN} = "tegra-libraries-multimedia tegra-libraries-multimedia-utils"
