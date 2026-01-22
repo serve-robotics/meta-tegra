@@ -132,6 +132,14 @@ IMAGE_INSTALL += " \
     cuda-toolkit-sbsa \
 "
 
+# Add PVA (Programmable Vision Accelerator) SDK and VPI
+# CUPVA: SDK for programming the PVA engine directly
+# VPI: Vision Programming Interface for accelerated computer vision
+IMAGE_INSTALL += " \
+    cupva \
+    libnvvpi4 \
+"
+
 # Add development tools for CUDA compilation
 IMAGE_INSTALL += " \
     gcc \

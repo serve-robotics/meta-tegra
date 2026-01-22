@@ -118,9 +118,9 @@ SKIP_FILEDEPS:${PN} = "1"
 # Runtime dependencies
 RDEPENDS:${PN} = "nvidia-l4t-cuda"
 
-# Provide cuda-toolkit virtual
-PROVIDES = "cuda-toolkit cuda-nvcc"
-RPROVIDES:${PN} = "cuda-toolkit cuda-nvcc"
+# Provide cuda-toolkit virtual and cuda-cudart for upstream recipe compatibility
+PROVIDES = "cuda-toolkit cuda-nvcc cuda-cudart cuda-nvrtc"
+RPROVIDES:${PN} = "cuda-toolkit cuda-nvcc cuda-cudart cuda-nvrtc"
 
 # This is a large package
 INSANE_SKIP:${PN} += "installed-vs-shipped"
