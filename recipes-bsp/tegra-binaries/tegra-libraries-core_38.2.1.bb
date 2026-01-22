@@ -165,12 +165,16 @@ RPROVIDES:${PN} = " \
     libnvidia-opticalflow.so()(64bit) \
     libnvidia-opticalflow.so.1()(64bit) \
     libEGL_nvidia.so.0()(64bit) \
+    libnvargus_socketclient.so()(64bit) \
+    libnvargus_socketserver.so()(64bit) \
+    libnvcamerautils.so()(64bit) \
     tegra-libraries-pva \
     tegra-libraries-nvsci \
     tegra-libraries-eglcore \
     tegra-libraries-glescore \
     tegra-libraries-gbm-backend \
     tegra-libraries-winsys \
+    tegra-libraries-argus \
 "
 
 PACKAGES = "${PN}"

@@ -140,6 +140,13 @@ IMAGE_INSTALL += " \
     libnvvpi4 \
 "
 
+# Add camera/ISP support
+# nvargus-daemon: Provides camera abstraction via Argus API
+# Required for ISP (Image Signal Processor) functionality
+IMAGE_INSTALL += " \
+    tegra-argus-daemon \
+"
+
 # Add development tools for CUDA compilation
 IMAGE_INSTALL += " \
     gcc \
