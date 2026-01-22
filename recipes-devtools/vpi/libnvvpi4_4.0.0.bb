@@ -20,9 +20,10 @@ do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
 do_install() {
-    # Extract deb
+    # Extract deb from downloads directory
     mkdir -p ${WORKDIR}/vpi
-    ar x ${WORKDIR}/libnvvpi4_4.0.0~er5_arm64.deb
+    cd ${WORKDIR}/vpi
+    ar x ${DL_DIR}/libnvvpi4_4.0.0~er5_arm64.deb
     tar -xf data.tar.* -C ${WORKDIR}/vpi
     rm -f data.tar.* control.tar.* debian-binary
 
@@ -52,20 +53,22 @@ INHIBIT_PACKAGE_STRIP = "1"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 INHIBIT_SYSROOT_STRIP = "1"
 
+# Skip file-rdeps QA - libraries are provided by tegra-libraries-core and nvidia-l4t-multimedia
+INSANE_SKIP:${PN} = "file-rdeps already-stripped ldflags"
+
 PACKAGES = "${PN} ${PN}-dev"
 
 FILES:${PN} = " \
-    /opt/nvidia/vpi4/lib/aarch64-linux-gnu/lib*${SOLIBS} \
-    /opt/nvidia/vpi4/lib/aarch64-linux-gnu/priv \
+    /opt/nvidia/vpi4/lib \
     /opt/nvidia/vpi4/lib64 \
+    /opt/nvidia/vpi4/etc \
+    /opt/nvidia/vpi4/doc \
     ${sysconfdir}/ld.so.conf.d \
     ${nonarch_base_libdir}/firmware \
 "
 
 FILES:${PN}-dev = " \
-    /opt/nvidia/vpi4/lib/aarch64-linux-gnu/lib*${SOLIBSDEV} \
     /opt/nvidia/vpi4/include \
-    /opt/nvidia/vpi4/lib/aarch64-linux-gnu/cmake \
 "
 
 # VPI 4 has minimal dependencies - just libc6

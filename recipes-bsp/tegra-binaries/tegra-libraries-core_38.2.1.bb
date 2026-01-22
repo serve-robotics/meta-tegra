@@ -144,6 +144,27 @@ RPROVIDES:${PN} = " \
     libnvbufsurface.so()(64bit) \
     libnvbufsurftransform.so()(64bit) \
     libv4l2.so.0()(64bit) \
+    libnvscibuf.so()(64bit) \
+    libnvscibuf.so.1()(64bit) \
+    libnvscicommon.so()(64bit) \
+    libnvscicommon.so.1()(64bit) \
+    libnvscievent.so()(64bit) \
+    libnvsciipc.so()(64bit) \
+    libnvscistream.so()(64bit) \
+    libnvscistream.so.1()(64bit) \
+    libnvscisync.so()(64bit) \
+    libnvscisync.so.1()(64bit) \
+    libnvmedia.so()(64bit) \
+    libnvos.so()(64bit) \
+    libnvrm_host1x.so()(64bit) \
+    libnvrm_mem.so()(64bit) \
+    libnvrm_surface.so()(64bit) \
+    libnvrm_sync.so()(64bit) \
+    libnvvic.so()(64bit) \
+    libnvsocsys.so()(64bit) \
+    libnvidia-opticalflow.so()(64bit) \
+    libnvidia-opticalflow.so.1()(64bit) \
+    libEGL_nvidia.so.0()(64bit) \
     tegra-libraries-pva \
     tegra-libraries-nvsci \
     tegra-libraries-eglcore \

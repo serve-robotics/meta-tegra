@@ -2,7 +2,7 @@ SUMMARY = "NVIDIA CUPVA - Compute Unified Programmable Vision Accelerator SDK"
 DESCRIPTION = "PVA SDK provides a programming environment for the NVIDIA Tegra PVA engine"
 HOMEPAGE = "https://www.nvidia.com"
 LICENSE = "Proprietary"
-LIC_FILES_CHKSUM = "file://opt/nvidia/pva/LICENSE;md5=2cc00be68c1227a7c42ff3620ef75d05"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Proprietary;md5=0557f9d92cf58f2ccdd50f62f8ac0b28"
 
 # Thor R38.2 uses PVA SDK 2.7.1 (not 2.5.3 like R36.x)
 PV = "2.7.1"
@@ -24,22 +24,24 @@ do_configure[noexec] = "1"
 do_compile[noexec] = "1"
 
 do_install() {
-    # Extract pva-sdk deb
+    # Extract pva-sdk deb from downloads directory
     mkdir -p ${WORKDIR}/sdk
-    ar x ${WORKDIR}/pva-sdk-2.7-l4t_${PV}_arm64.deb
+    cd ${WORKDIR}/sdk
+    ar x ${DL_DIR}/pva-sdk-2.7-l4t_${PV}_arm64.deb
     tar -xf data.tar.* -C ${WORKDIR}/sdk
     rm -f data.tar.* control.tar.* debian-binary
 
-    # Extract pva-allow deb
+    # Extract pva-allow deb from downloads directory
     mkdir -p ${WORKDIR}/allow
-    ar x ${WORKDIR}/pva-allow-2_2.0.5_all.deb
+    cd ${WORKDIR}/allow
+    ar x ${DL_DIR}/pva-allow-2_2.0.5_all.deb
     tar -xf data.tar.* -C ${WORKDIR}/allow
     rm -f data.tar.* control.tar.* debian-binary
 
-    # Install PVA SDK libraries
-    install -d ${D}/opt/nvidia/pva
-    if [ -d ${WORKDIR}/sdk/opt/nvidia/pva ]; then
-        cp -R --preserve=mode,timestamps ${WORKDIR}/sdk/opt/nvidia/pva/* ${D}/opt/nvidia/pva/
+    # Install PVA SDK libraries (in pva-sdk-2.7 directory)
+    install -d ${D}/opt/nvidia/pva-sdk-2.7
+    if [ -d ${WORKDIR}/sdk/opt/nvidia/pva-sdk-2.7 ]; then
+        cp -R --preserve=mode,timestamps ${WORKDIR}/sdk/opt/nvidia/pva-sdk-2.7/* ${D}/opt/nvidia/pva-sdk-2.7/
     fi
 
     # Install pva-allow tool
@@ -56,7 +58,7 @@ do_install() {
 
     # Create ld.so.conf.d entry
     install -d ${D}${sysconfdir}/ld.so.conf.d
-    echo "/opt/nvidia/pva/lib/aarch64-linux-gnu" > ${D}${sysconfdir}/ld.so.conf.d/cupva.conf
+    echo "/opt/nvidia/pva-sdk-2.7/lib/aarch64-linux-gnu" > ${D}${sysconfdir}/ld.so.conf.d/cupva.conf
 }
 
 SYSROOT_DIRS:append = " /opt"
@@ -65,8 +67,11 @@ INHIBIT_PACKAGE_STRIP = "1"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 INHIBIT_SYSROOT_STRIP = "1"
 
+# Skip file-rdeps QA - libraries are provided by tegra-libraries-core
+INSANE_SKIP:${PN} = "file-rdeps already-stripped ldflags"
+
 FILES:${PN} = " \
-    /opt/nvidia/pva \
+    /opt/nvidia/pva-sdk-2.7 \
     ${bindir} \
     ${libdir} \
     ${sysconfdir}/ld.so.conf.d \
