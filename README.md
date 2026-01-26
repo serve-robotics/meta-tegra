@@ -1,8 +1,8 @@
 OpenEmbedded/Yocto BSP layer for NVIDIA Jetson Modules
 ======================================================
 
-Jetson Linux release: R38.2.1
-JetPack release:      7
+Jetson Linux release: R38.4.0
+JetPack release:      7.1
 
 Boards supported:
 * Jetson AGX Orin development kit
@@ -66,8 +66,8 @@ Contributions are welcome!
 
 ## Jetson AGX Thor Support (thor-scarthgap branch)
 
-This branch adds support for the NVIDIA Jetson AGX Thor Developer Kit with 
-Jetson Linux R38.2.1 (JetPack 7.0).
+This branch adds support for the NVIDIA Jetson AGX Thor Developer Kit with
+Jetson Linux R38.4.0 (JetPack 7.1).
 
 ### Key Features:
 - Linux Kernel 6.8
@@ -100,7 +100,7 @@ bitbake tegra-thor-image
 
 ### References:
 
-- [Jetson Linux R38.2.1 Release Notes](https://docs.nvidia.com/jetson/archives/r38.2.1/ReleaseNotes/)
-- [Jetson Thor Developer Guide](https://docs.nvidia.com/jetson/archives/r38.2/DeveloperGuide/)
-- [JetPack 7.0 Downloads](https://developer.nvidia.com/embedded/jetpack/downloads)
+- [Jetson Linux R38.4.0 Release Notes](https://docs.nvidia.com/jetson/archives/r38.4.0/ReleaseNotes/)
+- [Jetson Thor Developer Guide](https://docs.nvidia.com/jetson/archives/r38.4/DeveloperGuide/)
+- [JetPack 7.1 Downloads](https://developer.nvidia.com/embedded/jetpack/downloads)
 

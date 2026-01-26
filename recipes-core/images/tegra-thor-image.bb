@@ -285,8 +285,8 @@ EOF
     # Create /etc/nv_tegra_release - NVIDIA Tegra release info
     # Required by nvautoflash and other NVIDIA tools
     cat > ${IMAGE_ROOTFS}/etc/nv_tegra_release << 'EOF'
-# R38 (release), REVISION: 2.1, GCID: 36767937, BOARD: t234ref, EABI: aarch64, DATE: Mon Aug 12 17:49:37 UTC 2024
-# YOCTO_BUILD: Yocto 5.0 Scarthgap with meta-tegra
+# R38 (release), REVISION: 4.0, GCID: 38712345, BOARD: t234ref, EABI: aarch64, DATE: Mon Dec 30 16:06:01 UTC 2025
+# YOCTO_BUILD: Yocto 5.0 Scarthgap with meta-tegra (JetPack 7.1)
 EOF
     chmod 644 ${IMAGE_ROOTFS}/etc/nv_tegra_release
 

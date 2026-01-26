@@ -5,7 +5,7 @@ L4T_URI = "https://developer.nvidia.com/downloads/embedded/L4T/r38_Release_v2.1/
 
 SRC_URI = "${L4T_URI}"
 
-SRC_URI[sha256sum] = "ada1ed68b78e0e9807c70db87be562b6eac6aa95d538bf63b6e9f8a30083704b"
+SRC_URI[sha256sum] = "6bb0dd0786f0fe9fbd0cbcc48bce33b778f01972cdfcdf5d6f73ac8b46f90f67"
 
 COMPATIBLE_MACHINE = "(tegra234)"
 
