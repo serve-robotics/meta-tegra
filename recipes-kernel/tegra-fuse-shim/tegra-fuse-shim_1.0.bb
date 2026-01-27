@@ -32,4 +32,4 @@ KERNEL_MODULE_AUTOLOAD += "tegra_fuse"
 # Module should load before nvidia multimedia libraries are used
 KERNEL_MODULE_PROBECONF += "tegra_fuse"
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"

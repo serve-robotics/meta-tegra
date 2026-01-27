@@ -4,7 +4,7 @@ HOMEPAGE = "https://developer.nvidia.com/cuda-toolkit"
 LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = ""
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 # CUDA packages from NVIDIA SBSA repository for Ubuntu 24.04
 SRC_URI = " \

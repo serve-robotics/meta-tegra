@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 require tegra-binaries-${PV}.inc
 
 INHIBIT_DEFAULT_DEPS = "1"
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 # Set default partition layout for Thor/Tegra234
 PARTITION_LAYOUT_EXTERNAL_DEFAULT ??= "flash_t234_qspi_sdmmc.xml"

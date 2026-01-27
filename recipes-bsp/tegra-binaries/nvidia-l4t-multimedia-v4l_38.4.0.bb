@@ -5,7 +5,7 @@ path via /dev/nvidia0 with LD_PRELOAD=libnvcuvidv4l2.so and AARCH64_DGPU=1 envir
 LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = ""
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 inherit bin_package
 

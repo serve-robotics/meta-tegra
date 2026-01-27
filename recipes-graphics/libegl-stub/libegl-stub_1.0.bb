@@ -26,4 +26,4 @@ FILES:${PN} = "${libdir}/libEGL.so*"
 # Note: Does NOT provide virtual/egl to avoid conflicts with libglvnd
 # This is just a stub for libnvbufsurftransform runtime dependency
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"

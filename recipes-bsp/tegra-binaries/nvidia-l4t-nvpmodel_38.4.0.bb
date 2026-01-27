@@ -4,7 +4,7 @@ on Jetson platforms. Controls CPU/GPU clocks and power limits."
 LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = ""
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 inherit bin_package
 

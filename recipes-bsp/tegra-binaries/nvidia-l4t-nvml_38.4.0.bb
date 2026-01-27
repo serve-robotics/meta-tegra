@@ -4,7 +4,7 @@ GPU management and monitoring on Jetson Thor with discrete GPU"
 LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = ""
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 inherit bin_package
 

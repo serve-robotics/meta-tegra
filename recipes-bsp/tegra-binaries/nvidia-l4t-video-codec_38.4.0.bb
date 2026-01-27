@@ -3,7 +3,7 @@ DESCRIPTION = "NVENC/NVDEC video codec libraries from NVIDIA L4T R38.4.0 for Jet
 LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = ""
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 inherit bin_package
 

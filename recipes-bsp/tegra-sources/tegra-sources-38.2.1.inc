@@ -38,5 +38,5 @@ python do_unpack() {
         fetcher.unpack(d.getVar('WORKDIR'), urls=other_src_uris)
 }
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 PACKAGE_ARCH = "${L4T_BSP_PKGARCH}"

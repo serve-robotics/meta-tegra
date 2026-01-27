@@ -3,7 +3,7 @@ DESCRIPTION = "CUDA driver libraries from NVIDIA L4T R38.4.0 for Jetson Thor"
 LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = ""
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 inherit bin_package
 

@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://nv_tegra/LICENSE;md5=60ad17cc726658e8cf73578bea47b85f
 
 require tegra-binaries-${PV}.inc
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 SRC_URI = " \
     https://developer.nvidia.com/downloads/embedded/L4T/r38_Release_v4.0/release/Jetson_Linux_R${PV}_aarch64.tbz2;name=l4t_bsp \

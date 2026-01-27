@@ -40,4 +40,4 @@ INSANE_SKIP:${PN} = "dev-so"
 # Explicitly provide the shlib for dnf dependency resolution
 RPROVIDES:${PN} = "libgstnvcustomhelper.so()(64bit)"
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"

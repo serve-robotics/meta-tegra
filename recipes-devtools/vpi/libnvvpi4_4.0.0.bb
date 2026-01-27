@@ -12,7 +12,7 @@ SRC_URI[sha256sum] = "0d5cd45f6eb8527ceb70f0b98fe4480014898da63493f6fcae177c7b6a
 
 S = "${WORKDIR}"
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 do_unpack[depends] += "xz-native:do_populate_sysroot"
 

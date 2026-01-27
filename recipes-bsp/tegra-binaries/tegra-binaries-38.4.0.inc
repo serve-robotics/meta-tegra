@@ -7,7 +7,7 @@ SRC_URI = "${L4T_URI}"
 
 SRC_URI[sha256sum] = "6bb0dd0786f0fe9fbd0cbcc48bce33b778f01972cdfcdf5d6f73ac8b46f90f67"
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 # Thor uses SBSA architecture
 TEGRA_SBSA = "1"
@@ -15,5 +15,5 @@ TEGRA_SBSA = "1"
 # OpenRM stack
 TEGRA_OPENRM = "1"
 
-L4T_BSP_ARCH = "tegra234"
-L4T_BSP_NAME = "t234"
+L4T_BSP_ARCH = "tegra264"
+L4T_BSP_NAME = "t264"

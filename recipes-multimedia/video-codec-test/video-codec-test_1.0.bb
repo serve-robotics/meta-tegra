@@ -3,7 +3,7 @@ DESCRIPTION = "Test programs to verify NVENC/NVDEC and NvMedia IDE/IEP functiona
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 SRC_URI = "file://test_video_codec.c \
            file://test_nvvideo.c \

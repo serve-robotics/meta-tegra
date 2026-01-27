@@ -16,7 +16,7 @@ DEPENDS:append = " virtual/${TARGET_PREFIX}gcc"
 S = "${WORKDIR}/arm-trusted-firmware"
 B = "${WORKDIR}/build"
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 CVE_PRODUCT = "arm:arm-trusted-firmware \
                arm:trusted_firmware-a \

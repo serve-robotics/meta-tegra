@@ -61,4 +61,4 @@ INSANE_SKIP:${PN} = "file-rdeps"
 # We explicitly depend on tegra-libraries-multimedia-v4l for the Tegra version
 PRIVATE_LIBS = "libv4l2.so.0"
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"

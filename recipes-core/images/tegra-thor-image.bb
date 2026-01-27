@@ -318,7 +318,7 @@ EOF
     touch ${IMAGE_ROOTFS}/opt/nvidia/l4t-packages/.nv-l4t-disable-boot-fw-update-in-preinstall
 }
 
-COMPATIBLE_MACHINE = "(tegra234)"
+COMPATIBLE_MACHINE = "(tegra264)"
 
 # Use ext4 for root filesystem
 IMAGE_FSTYPES = "tar.bz2 ext4"
