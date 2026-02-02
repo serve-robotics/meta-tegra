@@ -44,6 +44,12 @@ IMAGE_INSTALL += " \
     dhcpcd \
 "
 
+# Add CAN bus utilities for mttcan testing
+IMAGE_INSTALL += " \
+    can-utils \
+    iproute2-ss \
+"
+
 # Add ALSA audio support
 IMAGE_INSTALL += " \
     alsa-state \
