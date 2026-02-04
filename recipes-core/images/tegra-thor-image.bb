@@ -45,8 +45,10 @@ IMAGE_INSTALL += " \
 "
 
 # Add CAN bus utilities for mttcan testing
+# can-utils-cantest provides canbusload, can-calc-bit-timing, canfdtest
 IMAGE_INSTALL += " \
     can-utils \
+    can-utils-cantest \
     iproute2-ss \
 "
 
